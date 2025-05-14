@@ -35,6 +35,9 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsAuthor]
     pagination_class = PostPagination
 
+    def get_queryset(self):
+        return Post.objects.all()
+
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
@@ -48,15 +51,10 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     def list(self, request, *args, **kwargs):
-        """Получение списка всех публикаций с пагинацией."""
+        """Получение списка всех публикаций."""
         queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data)  # Возвращаем только данные постов
 
     def retrieve(self, request, *args, **kwargs):
         """Получение публикации по id."""
