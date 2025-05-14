@@ -155,16 +155,11 @@ class FollowViewSet(viewsets.ModelViewSet):
                 {'error': 'Вы не можете подписаться на самого себя.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+          
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-class TokenVerifyView(APIView):
-    def post(self, request):
-        token = request.data.get('token')
-        if not token:
-            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
-            # Логика верификации токена...
-        return Response({'valid': True})
+
 
