@@ -106,7 +106,12 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         """Обновление комментария по id."""
-        return self.perform_update(request, *args, **kwargs)
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()  # Получаем экземпляр комментария
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)  # Здесь не передаем post_id
+        return Response(serializer.data)
 
     def partial_update(self, request, *args, **kwargs):
         """Частичное обновление комментария по id."""
