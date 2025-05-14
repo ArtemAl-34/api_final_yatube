@@ -1,6 +1,7 @@
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 
 from rest_framework.pagination import PageNumberPagination
 from .permissions import IsAuthor
@@ -17,7 +18,7 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с группами."""
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
         """Возвращает все группы, доступные текущему пользователю."""
@@ -145,4 +146,12 @@ class FollowViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+class TokenVerifyView(APIView):
+    def post(self, request):
+        token = request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+            # Логика верификации токена...
+        return Response({'valid': True})
 
