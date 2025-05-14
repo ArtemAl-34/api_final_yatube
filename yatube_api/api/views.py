@@ -115,7 +115,15 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         """Частичное обновление комментария по id."""
-        return self.perform_update(request, *args, **kwargs)
+        # Получаем объект, который нужно обновить
+        partial = True  # Указываем, что это частичное обновление
+        instance = self.get_object()  # Получаем экземпляр объекта по ID из kwargs
+
+        # Обновляем объект с помощью perform_update
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         """Удаление комментария по id."""
