@@ -28,12 +28,13 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['author', 'post']
 
 class FollowSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
-
+    user = serializers.CharField(source='user.username', read_only=True)
+    following = serializers.CharField(source='following.username', read_only=True)
+    
     class Meta:
         model = Follow
-        fields = ['user', 'following', 'username']
-        read_only_fields = ['user']
+        fields = ['user', 'following']
+        read_only_fields = ['user', 'following']
 
     def get_username(self, obj):
         """Возвращает имя пользователя подписчика."""
