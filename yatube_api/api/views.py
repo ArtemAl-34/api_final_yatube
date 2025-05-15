@@ -143,9 +143,14 @@ class FollowViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Возвращает все подписки текущего пользователя."""
         user = self.request.user
-        return Follow.objects.filter(user=user)
+        queryset = Follow.objects.filter(user=user)
+
+        search_username = self.request.query_params.get('search', None)
+        if search_username:
+            queryset = queryset.filter(following__username__icontains=search_username)
+
+        return queryset
 
     def create(self, request, *args, **kwargs):
         """Подписка на пользователя."""
