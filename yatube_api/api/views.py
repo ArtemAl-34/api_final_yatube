@@ -2,13 +2,13 @@ from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.pagination import LimitOffsetPagination
 
-from rest_framework.pagination import PageNumberPagination
 from .permissions import IsAuthor
 from .serializers import CommentSerializer, GroupSerializer, PostSerializer, FollowSerializer
 from posts.models import Comment, Group, Post, Follow
 
-class PostPagination(PageNumberPagination):
+class PostPagination(LimitOffsetPagination):
     """Класс пагинации для публикаций."""
     page_size = 10  # Количество публикаций на страницу по умолчанию
     page_size_query_param = 'limit'  # Параметр для указания количества публикаций на страницу
@@ -50,12 +50,6 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Переопределяет метод создания поста."""
         serializer.save(author=self.request.user)
-
-    def list(self, request, *args, **kwargs):
-        """Получение списка всех публикаций."""
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)  # Возвращаем только данные постов
 
     def retrieve(self, request, *args, **kwargs):
         """Получение публикации по id."""
