@@ -51,15 +51,12 @@ class FollowSerializer(serializers.ModelSerializer):
         """Проверка уникальности подписки."""
         user = self.context['request'].user
         following = attrs.get('following')
-
-        # Проверка на существование подписки
         if Follow.objects.filter(user=user, following=following).exists():
             raise serializers.ValidationError("Вы уже подписаны на этого пользователя.")
-
         return attrs
 
     def create(self, validated_data):
         """Создание новой подписки."""
         request = self.context['request']
-        validated_data['user'] = request.user  # Устанавливаем текущего пользователя как подписчика
+        validated_data['user'] = request.user
         return super().create(validated_data)
