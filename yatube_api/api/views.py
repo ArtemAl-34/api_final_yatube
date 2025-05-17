@@ -1,18 +1,16 @@
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, status
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.pagination import LimitOffsetPagination
 
+from .pagination import PostPagination
 from .permissions import IsAuthor
-from .serializers import CommentSerializer, GroupSerializer, PostSerializer, FollowSerializer
+from .serializers import (
+    CommentSerializer,
+    GroupSerializer,
+    PostSerializer,
+    FollowSerializer,
+)
 from posts.models import Comment, Group, Post, Follow
 
-class PostPagination(LimitOffsetPagination):
-    """Класс пагинации для публикаций."""
-    page_size = 10  # Количество публикаций на страницу по умолчанию
-    page_size_query_param = 'limit'  # Параметр для указания количества публикаций на страницу
-    max_page_size = 100  # Максимальное количество публикаций на страницу
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для работы с группами."""
@@ -22,12 +20,12 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         """Возвращает все группы, доступные текущему пользователю."""
-        # Здесь вы можете добавить дополнительную фильтрацию, если это необходимо
         return super().get_queryset()
 
     def retrieve(self, request, *args, **kwargs):
         """Получение информации о сообществе по id."""
         return super().retrieve(request, *args, **kwargs)
+
 
 class PostViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с постами."""
@@ -53,28 +51,39 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """Получение публикации по id."""
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        return self.get_post_response(*args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         """Обновление публикации по id."""
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
+        return self.update_post_response(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
         """Частичное обновление публикации по id."""
-        return self.update(request, *args, **kwargs)
+        return self.update_post_response(request, *args,
+                                         partial=True, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         """Удаление публикации по id."""
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response(status=204)
+
+    def get_post_response(self, *args, **kwargs):
+        """Общий метод для получения поста и его сериализации."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def update_post_response(self, request, *args, **kwargs):
+        """Общий метод для обновления поста."""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,
+                                         data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с комментариями."""
@@ -93,31 +102,15 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """Получение комментария по id."""
-        post_id = self.kwargs['post_id']
-        comment = self.get_object()
-        serializer = self.get_serializer(comment)
-        return Response(serializer.data)
+        return self._get_comment_response()
 
     def update(self, request, *args, **kwargs):
         """Обновление комментария по id."""
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()  # Получаем экземпляр комментария
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)  # Здесь не передаем post_id
-        return Response(serializer.data)
+        return self._update_comment(request, partial=False)
 
     def partial_update(self, request, *args, **kwargs):
         """Частичное обновление комментария по id."""
-        # Получаем объект, который нужно обновить
-        partial = True  # Указываем, что это частичное обновление
-        instance = self.get_object()  # Получаем экземпляр объекта по ID из kwargs
-
-        # Обновляем объект с помощью perform_update
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
+        return self._update_comment(request, partial=True)
 
     def destroy(self, request, *args, **kwargs):
         """Удаление комментария по id."""
@@ -131,18 +124,38 @@ class CommentViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return super().get_permissions()
 
+    def _get_comment_response(self):
+        """Общая логика для получения комментария по id."""
+        comment = self.get_object()
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data)
+
+    def _update_comment(self, request, partial):
+        """Общая логика для обновления комментария."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance,
+                                         data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+
 class FollowViewSet(viewsets.ModelViewSet):
+    """ViewSet для управления подписками пользователей."""
     queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        """Возвращает список подписок текущего пользователя."""
         user = self.request.user
         queryset = Follow.objects.filter(user=user)
 
         search_username = self.request.query_params.get('search', None)
         if search_username:
-            queryset = queryset.filter(following__username__icontains=search_username)
+            queryset = queryset.filter(
+                following__username__icontains=search_username
+            )
 
         return queryset
 
@@ -154,11 +167,7 @@ class FollowViewSet(viewsets.ModelViewSet):
                 {'error': 'Вы не можете подписаться на самого себя.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-          
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-
-
