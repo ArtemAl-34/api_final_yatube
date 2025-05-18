@@ -26,55 +26,14 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsAuthor]
     pagination_class = PostPagination
 
-    def get_queryset(self):
-        return Post.objects.all()
-
     def get_permissions(self):
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
         return super().get_permissions()
 
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
     def perform_create(self, serializer):
         """Переопределяет метод создания поста."""
         serializer.save(author=self.request.user)
-
-    def retrieve(self, request, *args, **kwargs):
-        """Получение публикации по id."""
-        return self.get_post_response(*args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        """Обновление публикации по id."""
-        return self.update_post_response(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        """Частичное обновление публикации по id."""
-        return self.update_post_response(request, *args,
-                                         partial=True, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        """Удаление публикации по id."""
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=204)
-
-    def get_post_response(self, *args, **kwargs):
-        """Общий метод для получения поста и его сериализации."""
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def update_post_response(self, request, *args, **kwargs):
-        """Общий метод для обновления поста."""
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance,
-                                         data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
