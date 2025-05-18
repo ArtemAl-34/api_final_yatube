@@ -53,7 +53,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class FollowViewSet(viewsets.ModelViewSet):
     """ViewSet для управления подписками пользователей."""
-    queryset = Follow.objects.all()
     serializer_class = FollowSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -61,7 +60,6 @@ class FollowViewSet(viewsets.ModelViewSet):
         """Возвращает список подписок текущего пользователя."""
         user = self.request.user
         queryset = Follow.objects.filter(user=user)
-
         search_username = self.request.query_params.get('search', None)
         if search_username:
             queryset = queryset.filter(
