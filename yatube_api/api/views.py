@@ -18,14 +18,6 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [permissions.AllowAny]
 
-    def get_queryset(self):
-        """Возвращает все группы, доступные текущему пользователю."""
-        return super().get_queryset()
-
-    def retrieve(self, request, *args, **kwargs):
-        """Получение информации о сообществе по id."""
-        return super().retrieve(request, *args, **kwargs)
-
 
 class PostViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с постами."""
