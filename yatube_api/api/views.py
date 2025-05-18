@@ -1,7 +1,7 @@
 from rest_framework import permissions, viewsets
 
 from .pagination import PostPagination
-from .permissions import IsAuthor
+from .permissions import IsAuthenticatedOrAuthor
 from .serializers import (
     CommentSerializer,
     GroupSerializer,
@@ -22,7 +22,7 @@ class PostViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с постами."""
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAuthor]
+    permission_classes = [IsAuthenticatedOrAuthor]
     pagination_class = PostPagination
 
     def get_permissions(self):
@@ -38,7 +38,7 @@ class PostViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """ViewSet для работы с комментариями."""
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAuthor]
+    permission_classes = [IsAuthenticatedOrAuthor]
 
     def get_queryset(self):
         """Возвращает набор комментариев для конкретного поста."""
