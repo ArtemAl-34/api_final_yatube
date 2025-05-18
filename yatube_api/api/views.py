@@ -1,5 +1,7 @@
+from django_filters import rest_framework as filters
 from rest_framework import permissions, viewsets
 
+from .filters import FollowFilter
 from .pagination import PostPagination
 from .permissions import IsAuthenticatedOrAuthor
 from .serializers import (
@@ -55,15 +57,10 @@ class FollowViewSet(viewsets.ModelViewSet):
     """ViewSet для управления подписками пользователей."""
     serializer_class = FollowSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = FollowFilter
 
     def get_queryset(self):
         """Возвращает список подписок текущего пользователя."""
         user = self.request.user
-        queryset = Follow.objects.filter(user=user)
-        search_username = self.request.query_params.get('search', None)
-        if search_username:
-            queryset = queryset.filter(
-                following__username__icontains=search_username
-            )
-
-        return queryset
+        return Follow.objects.filter(user=user)
