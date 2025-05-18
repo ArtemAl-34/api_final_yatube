@@ -1,5 +1,4 @@
-from rest_framework import permissions, viewsets, status
-from rest_framework.response import Response
+from rest_framework import permissions, viewsets
 
 from .pagination import PostPagination
 from .permissions import IsAuthor
@@ -51,15 +50,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         post_id = self.kwargs['post_id']
         serializer.save(author=self.request.user, post_id=post_id)
 
-
-
     def get_permissions(self):
         """Устанавливает разрешения для методов."""
         if self.request.method in permissions.SAFE_METHODS:
             return [permissions.AllowAny()]
         return super().get_permissions()
-
-
 
 
 class FollowViewSet(viewsets.ModelViewSet):
@@ -80,5 +75,3 @@ class FollowViewSet(viewsets.ModelViewSet):
             )
 
         return queryset
-
-
