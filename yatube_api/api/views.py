@@ -51,23 +51,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         post_id = self.kwargs['post_id']
         serializer.save(author=self.request.user, post_id=post_id)
 
-    def retrieve(self, request, *args, **kwargs):
-        """Получение комментария по id."""
-        return self._get_comment_response()
 
-    def update(self, request, *args, **kwargs):
-        """Обновление комментария по id."""
-        return self._update_comment(request, partial=False)
-
-    def partial_update(self, request, *args, **kwargs):
-        """Частичное обновление комментария по id."""
-        return self._update_comment(request, partial=True)
-
-    def destroy(self, request, *args, **kwargs):
-        """Удаление комментария по id."""
-        comment = self.get_object()
-        self.perform_destroy(comment)
-        return Response(status=204)
 
     def get_permissions(self):
         """Устанавливает разрешения для методов."""
@@ -75,20 +59,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             return [permissions.AllowAny()]
         return super().get_permissions()
 
-    def _get_comment_response(self):
-        """Общая логика для получения комментария по id."""
-        comment = self.get_object()
-        serializer = self.get_serializer(comment)
-        return Response(serializer.data)
 
-    def _update_comment(self, request, partial):
-        """Общая логика для обновления комментария."""
-        instance = self.get_object()
-        serializer = self.get_serializer(instance,
-                                         data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data)
 
 
 class FollowViewSet(viewsets.ModelViewSet):
@@ -110,15 +81,4 @@ class FollowViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def create(self, request, *args, **kwargs):
-        """Подписка на пользователя."""
-        following_id = request.data.get('following')
-        if following_id == request.user.id:
-            return Response(
-                {'error': 'Вы не можете подписаться на самого себя.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
