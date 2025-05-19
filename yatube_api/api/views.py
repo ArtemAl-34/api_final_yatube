@@ -63,4 +63,4 @@ class FollowViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Возвращает список подписок текущего пользователя."""
         user = self.request.user
-        return Follow.objects.filter(user=user)
+        return Follow.objects.filter(user=user)  # тестовые коментарии x
