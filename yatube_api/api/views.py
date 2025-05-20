@@ -3,7 +3,7 @@ from rest_framework import permissions, viewsets
 
 from .filters import FollowFilter
 from .pagination import PostPagination
-from .permissions import IsAuthenticatedOrAuthor
+from .permissions import IsAuthenticatedOrAuthor, IsAuthenticatedForSafeMethods
 from .serializers import (
     CommentSerializer,
     GroupSerializer,
@@ -56,11 +56,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 class FollowViewSet(viewsets.ModelViewSet):
     """ViewSet для управления подписками пользователей."""
     serializer_class = FollowSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticatedForSafeMethods]
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = FollowFilter
 
     def get_queryset(self):
         """Возвращает список подписок текущего пользователя."""
-        user = self.request.user
-        return Follow.objects.filter(user=user)
+        return Follow.objects.filter(user=self.request.user)

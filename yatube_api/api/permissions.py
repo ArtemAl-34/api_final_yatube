@@ -16,3 +16,15 @@ class IsAuthenticatedOrAuthor(permissions.BasePermission):
         return (
             obj.author == request.user
             or request.method in permissions.SAFE_METHODS)
+
+
+class IsAuthenticatedForSafeMethods(permissions.BasePermission):
+    """
+    Разрешение, которое позволяет доступ
+    только аутентифицированным пользователям
+    для GET и POST запросов.
+    """
+    def has_permission(self, request, view):
+        if request.method in ['GET', 'POST']:
+            return request.user.is_authenticated
+        return False
